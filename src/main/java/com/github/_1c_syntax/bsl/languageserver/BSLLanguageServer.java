@@ -32,6 +32,8 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DocumentLinkOptions;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
@@ -58,6 +60,7 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final BSLWorkspaceService workspaceService;
   private final ServerContext context;
   private final ServerInfo serverInfo;
+  private final SemanticTokensLegend legend;
   private boolean shutdownWasCalled;
 
   @Override
@@ -76,6 +79,11 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     capabilities.setCodeLensProvider(new CodeLensOptions());
     capabilities.setDocumentLinkProvider(new DocumentLinkOptions());
     capabilities.setWorkspaceSymbolProvider(Boolean.TRUE);
+
+    var semanticTokensProvider = new SemanticTokensWithRegistrationOptions(legend);
+    semanticTokensProvider.setFull(Boolean.TRUE);
+    semanticTokensProvider.setRange(Boolean.FALSE);
+    capabilities.setSemanticTokensProvider(semanticTokensProvider);
 
     InitializeResult result = new InitializeResult(capabilities, serverInfo);
 

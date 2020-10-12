@@ -56,7 +56,8 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.5.1")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
+//    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.9.0")
+    api("com.github.eclipse", "lsp4j", "fe532d73e4f21c6b8c5d363f8329722a3a0f8aaa")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "0.16.0") {
