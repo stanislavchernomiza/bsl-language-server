@@ -47,7 +47,9 @@ import com.github._1c_syntax.utils.Lazy;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
@@ -58,7 +60,10 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Nullable;
 import javax.annotation.PostConstruct;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -74,6 +79,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 @Component
 @Scope("prototype")
 @RequiredArgsConstructor
+@Slf4j
 public class DocumentContext {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
@@ -84,6 +90,9 @@ public class DocumentContext {
   private String content;
   @Getter
   private int version;
+
+  @Getter
+  private boolean withContent;
 
   @Setter(onMethod = @__({@Autowired}))
   private ServerContext context;
@@ -259,9 +268,8 @@ public class DocumentContext {
     computeLock.lock();
 
     boolean versionMatches = version == this.version && version != 0;
-    boolean contentWasCleared = this.content == null;
 
-    if (versionMatches && !contentWasCleared) {
+    if (versionMatches && withContent) {
       clearDependantData();
       computeLock.unlock();
       return;
@@ -272,11 +280,22 @@ public class DocumentContext {
     this.content = content;
     tokenizer = new BSLTokenizer(content);
     this.version = version;
+    withContent = true;
     computeLock.unlock();
+  }
+
+  public void rebuild() {
+    try {
+      var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
+      rebuild(newContent, 0);
+    } catch (IOException e) {
+      LOGGER.error("Can't rebuild content from uri", e);
+    }
   }
 
   public void clearSecondaryData() {
     computeLock.lock();
+    withContent = false;
     content = null;
     contentList.clear();
     tokenizer = null;

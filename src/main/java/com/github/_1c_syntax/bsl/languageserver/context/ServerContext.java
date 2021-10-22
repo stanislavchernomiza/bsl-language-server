@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
 import com.github._1c_syntax.mdclasses.Configuration;
 import com.github._1c_syntax.mdclasses.mdo.support.ModuleType;
@@ -54,6 +55,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 @Component
 @RequiredArgsConstructor
 public abstract class ServerContext {
+
+  private final DiagnosticProvider diagnosticProvider;
+
   private final Map<URI, DocumentContext> documents = Collections.synchronizedMap(new HashMap<>());
   private final Lazy<Configuration> configurationMetadata = new Lazy<>(this::computeConfigurationMetadata);
   @CheckForNull
@@ -76,6 +80,17 @@ public abstract class ServerContext {
       true
     );
     populateContext(files);
+
+    documents.values().parallelStream().forEach((DocumentContext documentContext) -> {
+      var withContent = documentContext.isWithContent();
+      if (!withContent) {
+        documentContext.rebuild();
+      }
+      diagnosticProvider.computeAndPublishDiagnostics(documentContext);
+      if (!withContent) {
+        documentContext.clearSecondaryData();
+      }
+    });
   }
 
   public void populateContext(Collection<File> uris) {

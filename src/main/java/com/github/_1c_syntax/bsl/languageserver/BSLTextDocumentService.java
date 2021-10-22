@@ -86,7 +86,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Component
@@ -108,6 +110,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   private final CallHierarchyProvider callHierarchyProvider;
   private final SelectionRangeProvider selectionRangeProvider;
   private final ColorProvider colorProvider;
+
+  private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
 
   @Override
   public CompletableFuture<Hover> hover(HoverParams params) {
@@ -295,6 +299,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
       validate(documentContext);
     }
+    openedDocuments.add(documentContext);
   }
 
   @Override
@@ -319,6 +324,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     if (documentContext == null) {
       return;
     }
+    openedDocuments.remove(documentContext);
 
     documentContext.clearSecondaryData();
 
