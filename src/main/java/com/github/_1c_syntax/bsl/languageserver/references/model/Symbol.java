@@ -26,6 +26,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Облегченные данные символа для поиска без кросс-ссылок между файлами.
@@ -35,7 +36,7 @@ import org.eclipse.lsp4j.SymbolKind;
 @Value
 @AllArgsConstructor
 @Builder
-public class Symbol {
+public class Symbol implements Comparable<Symbol> {
 
   /**
    * Cсылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
@@ -62,4 +63,11 @@ public class Symbol {
    */
   String symbolName;
 
+  @Override
+  public int compareTo(@NotNull Symbol o) {
+    if (this.equals(o)) {
+      return 0;
+    }
+    return hashCode() > o.hashCode() ? 1 : -1;
+  }
 }

@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 
 /**
  * Хранилище обращений к символам.
@@ -37,12 +39,12 @@ public class SymbolOccurrenceRepository {
   /**
    * Общий список обращений к символам.
    */
-  private final Set<SymbolOccurrence> occurrences = ConcurrentHashMap.newKeySet();
+  private final Set<SymbolOccurrence> occurrences = new ConcurrentSkipListSet<>();
 
   /**
    * Список обращений к символам в разрезе символов.
    */
-  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentHashMap<>();
+  private final Map<Symbol, Set<SymbolOccurrence>> occurrencesToSymbols = new ConcurrentSkipListMap<>();
 
   /**
    * Сохранить обращение к символу в хранилище.
@@ -51,7 +53,7 @@ public class SymbolOccurrenceRepository {
    */
   public void save(SymbolOccurrence symbolOccurrence) {
     occurrences.add(symbolOccurrence);
-    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> ConcurrentHashMap.newKeySet())
+    occurrencesToSymbols.computeIfAbsent(symbolOccurrence.getSymbol(), symbol -> new ConcurrentSkipListSet<>())
       .add(symbolOccurrence);
   }
 
